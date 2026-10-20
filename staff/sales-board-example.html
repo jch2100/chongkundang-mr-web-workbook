@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>종근당 영업관리 보드</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  /* CKD Corporate Colors */
+  --ckd:#003894;          /* CKD BLUE  R0 G56 B148 */
+  --ckd-deep:#00245E;
+  --ckd-bright:#2A6FD6;   /* 2025 CI 명도 상향 톤 */
+  --ckd-wash:#EAF0F9;
+  --gold:#8A7842;         /* CKD GOLD  PANTONE 872 */
+  --gold-lite:#C3A85F;
+  --silver:#9EA3A8;       /* CKD SILVER PANTONE 877 */
+  --black:#000000;        /* CKD BLACK */
+  --white:#FFFFFF;
+  --rule:#D5D8DD;
+  --rule-soft:#EBEDF0;
+  --grey:#6A7078;
+  --alert:#9B2C1F;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;
+  background:var(--white);color:var(--black);
+  font-size:14px;line-height:1.55;
+  font-feature-settings:'tnum' 1;
+  -webkit-font-smoothing:antialiased;
+}
+.n{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold-lite);outline-offset:2px}
+.wrap{max-width:1440px;margin:0 auto;padding:0 clamp(18px,4vw,56px)}
+
+/* ══════════ BOARD (full-bleed CKD BLUE) ══════════ */
+.board{background:var(--ckd);color:var(--white);padding:0 0 34px;position:relative}
+.mark{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  padding:16px 0 14px;border-bottom:1px solid rgba(255,255,255,.22);
+}
+.mark .id{display:flex;align-items:baseline;gap:12px}
+.mark .ckd{
+  font-weight:800;font-size:19px;letter-spacing:.12em;
+  border:2px solid var(--white);padding:2px 9px 3px;line-height:1;
+}
+.mark .ttl{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.mark .asof{font-size:12px;color:#A9C0E4}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.seg{display:flex;border:1px solid rgba(255,255,255,.4)}
+.seg button{padding:5px 14px;font-size:13px;color:#C7D8F0;border-right:1px solid rgba(255,255,255,.28)}
+.seg button:last-child{border-right:none}
+.seg button[aria-pressed="true"]{background:var(--white);color:var(--ckd);font-weight:700}
+.pick{
+  background:transparent;border:1px solid rgba(255,255,255,.4);color:var(--white);
+  padding:5px 10px;font-size:13px;
+}
+.pick option{color:var(--black)}
+
+/* headline figures */
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 52px;padding:38px 0 26px}
+.figure .lab{font-size:12.5px;color:#9FBAE3;margin-bottom:2px}
+.figure .big{font-size:clamp(52px,8vw,88px);font-weight:800;line-height:.88;letter-spacing:-.045em}
+.figure .big em{font-style:normal;font-size:.32em;font-weight:600;letter-spacing:-.01em;margin-left:6px;color:#BFD2EC}
+.figure .sub{font-size:13.5px;color:#BFD2EC;margin-top:10px}
+.side{display:flex;gap:44px;padding-bottom:10px}
+.side .v{font-size:30px;font-weight:750;line-height:1;letter-spacing:-.035em}
+.side .v.gold{color:var(--gold-lite)}
+.side .d{font-size:12.5px;color:#9FBAE3;margin-top:6px}
+
+/* year shape chart inside board */
+.shape{margin-top:6px}
+.shape svg{width:100%;height:150px;display:block;overflow:visible}
+.shape .mo{font-size:10.5px;fill:#8FAAD8}
+.shapekey{display:flex;gap:22px;font-size:12px;color:#A9C0E4;padding-top:14px}
+.shapekey i{display:inline-block;width:16px;height:8px;margin-right:7px;vertical-align:0}
+
+/* ══════════ sticky condensed bar ══════════ */
+.sticky{
+  position:sticky;top:0;z-index:40;background:var(--ckd-deep);color:#fff;
+  transform:translateY(-100%);transition:transform .25s;
+}
+.sticky[data-on="true"]{transform:none}
+.sticky .wrap{display:flex;align-items:center;gap:26px;padding-top:9px;padding-bottom:9px;font-size:13px}
+.sticky b{font-weight:750;font-size:15px}
+.sticky .jump{margin-left:auto;display:flex;gap:16px}
+.sticky .jump a{color:#B9CDEA;text-decoration:none;font-size:12.5px}
+.sticky .jump a:hover{color:#fff;text-decoration:underline}
+
+/* ══════════ SHEET ══════════ */
+.sheet{background:var(--white);padding-bottom:70px}
+.strip{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--rule)}
+.strip .cell{padding:22px 24px 20px;border-right:1px solid var(--rule-soft)}
+.strip .cell:first-child{padding-left:0}
+.strip .cell:last-child{border-right:none;padding-right:0}
+.strip .k{font-size:12.5px;color:var(--grey)}
+.strip .v{font-size:26px;font-weight:750;letter-spacing:-.035em;margin-top:6px}
+.strip .v small{font-size:13px;font-weight:500;color:var(--grey);margin-left:2px}
+.strip .d{font-size:12px;color:var(--grey);margin-top:3px}
+.pos{color:var(--ckd);font-weight:700}
+.neg{color:var(--alert);font-weight:700}
+
+.mod{padding-top:44px;scroll-margin-top:60px}
+.mod-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;padding-bottom:12px}
+.mod-head h2{font-size:17px;font-weight:750;letter-spacing:-.03em}
+.mod-head h2::before{content:'';display:inline-block;width:9px;height:9px;background:var(--ckd);margin-right:9px;vertical-align:1px}
+.mod-head p{font-size:12.5px;color:var(--grey)}
+.mod-head .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.mod-head input,.mod-head select{
+  border:1px solid var(--rule);padding:5px 10px;font:inherit;font-size:13px;background:var(--white)
+}
+.mod-head input{width:220px}
+
+/* table — ruled, no card */
+table{width:100%;border-collapse:collapse}
+th{
+  text-align:left;font-size:12px;font-weight:600;color:var(--grey);padding:8px 12px;
+  border-top:2px solid var(--ckd);border-bottom:1px solid var(--rule);
+  white-space:nowrap;cursor:pointer;user-select:none;
+}
+th:first-child,td:first-child{padding-left:0}
+th:last-child,td:last-child{padding-right:0}
+th.r,td.r{text-align:right}
+th[data-sorted]{color:var(--ckd)}
+th[data-sorted]::after{content:'';display:inline-block;margin-left:5px;border:4px solid transparent}
+th[data-sorted="desc"]::after{border-top-color:var(--ckd);transform:translateY(2px)}
+th[data-sorted="asc"]::after{border-bottom-color:var(--ckd);transform:translateY(-2px)}
+td{padding:11px 12px;border-bottom:1px solid var(--rule-soft);font-size:13.5px}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--ckd-wash)}
+tbody tr[aria-selected="true"] td{background:var(--ckd-wash);box-shadow:inset 3px 0 0 var(--ckd)}
+.pn{font-weight:650;letter-spacing:-.015em}
+.pi{display:block;font-size:11.5px;color:var(--grey);font-weight:400}
+.gauge{position:relative;height:16px;width:120px;margin-left:auto;background:var(--rule-soft)}
+.gauge i{position:absolute;left:0;top:0;bottom:0;background:var(--ckd)}
+.gauge u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--black);text-decoration:none}
+.gauge b{position:absolute;right:4px;top:0;line-height:16px;font-size:11px;font-weight:700;color:#fff;mix-blend-mode:difference}
+
+/* branch small multiples */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule-soft);border-top:2px solid var(--ckd);border-bottom:1px solid var(--rule)}
+.tile{background:var(--white);padding:15px 16px 12px}
+.tile .bn{font-size:13px;font-weight:650}
+.tile .br{font-size:29px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-top:5px}
+.tile .bd{font-size:11.5px;color:var(--grey);margin-top:3px}
+.tile svg{width:100%;height:34px;margin-top:9px;display:block}
+
+/* three column footer modules */
+.trio{display:grid;grid-template-columns:0.95fr 1.15fr 1.25fr;gap:38px}
+.colchart{border-top:2px solid var(--ckd);padding-top:14px}
+.colchart svg{width:100%;height:170px;display:block;overflow:visible}
+.chlist{margin-top:10px}
+.chrow{display:flex;align-items:center;gap:9px;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--rule-soft)}
+.chrow:last-child{border-bottom:none}
+.sw{width:10px;height:10px;flex:none}
+.chrow b{margin-left:auto}
+
+.issue{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--rule-soft);align-items:flex-start}
+.issue:last-child{border-bottom:none}
+.lv{width:4px;align-self:stretch;flex:none}
+.issue h4{font-size:13.5px;font-weight:700;letter-spacing:-.015em}
+.issue p{font-size:12.5px;color:#454A51;margin-top:2px}
+.issue time{font-size:11.5px;color:var(--grey);margin-left:auto;white-space:nowrap;padding-left:10px}
+
+.foot{border-top:1px solid var(--rule);margin-top:46px;padding-top:16px;font-size:12px;color:var(--grey);line-height:1.75}
+code{background:var(--ckd-wash);padding:1px 5px;font-size:11.5px}
+
+/* ══════════ detail panel ══════════ */
+.scrim{position:fixed;inset:0;background:rgba(0,36,94,.4);opacity:0;pointer-events:none;transition:opacity .25s;z-index:50}
+.scrim[data-open="true"]{opacity:1;pointer-events:auto}
+.panel{
+  position:fixed;top:0;right:0;bottom:0;width:430px;max-width:93vw;background:var(--white);
+  transform:translateX(101%);transition:transform .3s cubic-bezier(.22,.7,.3,1);z-index:60;
+  display:flex;flex-direction:column;
+}
+.panel[data-open="true"]{transform:none}
+.panel .ph{background:var(--ckd);color:#fff;padding:20px 24px 18px;display:flex;gap:12px;align-items:flex-start}
+.panel .ph h3{font-size:21px;font-weight:750;letter-spacing:-.035em}
+.panel .ph p{font-size:12.5px;color:#B6CBEA;margin-top:2px}
+.panel .x{margin-left:auto;font-size:22px;line-height:1;color:#B6CBEA;padding:0 4px}
+.panel .pb{overflow:auto;padding:0 24px 34px}
+.pstats{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule)}
+.pstats div{padding:14px 0;border-right:1px solid var(--rule-soft)}
+.pstats div:nth-child(even){padding-left:16px;border-right:none}
+.pstats span{font-size:12px;color:var(--grey);display:block}
+.pstats b{font-size:21px;font-weight:750;letter-spacing:-.03em}
+.psub{font-size:12px;font-weight:700;color:var(--ckd);margin:22px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--ckd)}
+#p-spark{width:100%;height:110px;display:block}
+.pbr{display:grid;grid-template-columns:58px 1fr 58px;gap:10px;align-items:center;padding:5px 0;font-size:12.5px}
+.pbtrack{height:12px;background:var(--rule-soft)}
+.pbtrack i{display:block;height:100%;background:var(--ckd-bright)}
+
+@media (max-width:1100px){
+  .strip{grid-template-columns:repeat(3,1fr)}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .trio{grid-template-columns:1fr;gap:0}
+  .trio > *{margin-top:34px}
+}
+@media (max-width:700px){
+  .strip{grid-template-columns:repeat(2,1fr)}
+  .strip .cell{padding:16px 12px}
+  .strip .cell:nth-child(odd){padding-left:0}
+  .side{gap:28px;flex-wrap:wrap}
+  .head{gap:20px}
+  .mod-head input{width:100%}
+  .sticky .jump{display:none}
+  th,td{padding:9px 7px;font-size:12.5px}
+  .gauge{width:64px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ BOARD ═══════════ -->
+<header class="board">
+  <div class="wrap">
+    <div class="mark">
+      <div class="id">
+        <span class="ckd">CKD</span>
+        <span class="ttl">영업관리 보드</span>
+        <span class="asof">기준 2026-08-31 · 단위 억원</span>
+      </div>
+      <div class="tools">
+        <div class="seg" id="seg" role="group" aria-label="기간">
+          <button data-p="q1" aria-pressed="false">1분기</button>
+          <button data-p="h1" aria-pressed="false">상반기</button>
+          <button data-p="ytd" aria-pressed="true">누적</button>
+          <button data-p="fy" aria-pressed="false">연간전망</button>
+        </div>
+        <select class="pick" id="brSel" aria-label="지점"><option value="all">전 지점</option></select>
+      </div>
+    </div>
+
+    <div class="head">
+      <div class="figure">
+        <div class="lab" id="h-lab">2026년 누적 실적</div>
+        <div class="big n"><span id="h-act">—</span><em>억원</em></div>
+        <div class="sub" id="h-sub"></div>
+      </div>
+      <div class="side">
+        <div><div class="v n" id="h-rate">—</div><div class="d">목표 달성률</div></div>
+        <div><div class="v n gold" id="h-gap">—</div><div class="d">목표 대비</div></div>
+        <div><div class="v n" id="h-yoy">—</div><div class="d">전년 동기비</div></div>
+      </div>
+    </div>
+
+    <div class="shape">
+      <svg id="year" viewBox="0 0 1000 150" preserveAspectRatio="none" role="img" aria-label="월별 실적 형태"></svg>
+      <div class="shapekey">
+        <span><i style="background:#fff"></i>실적</span>
+        <span><i style="background:rgba(255,255,255,.22)"></i>목표</span>
+        <span><i style="background:#C3A85F"></i>전년</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="sticky" id="sticky">
+  <div class="wrap">
+    <span>누적 <b class="n" id="s-act">—</b>억</span>
+    <span>달성 <b class="n" id="s-rate">—</b></span>
+    <span id="s-scope" style="color:#A9C0E4"></span>
+    <nav class="jump">
+      <a href="#m-prod">품목</a><a href="#m-branch">지점</a><a href="#m-ch">채널</a><a href="#m-issue">이슈</a>
+    </nav>
+  </div>
+</div>
+
+<!-- ═══════════ SHEET ═══════════ -->
+<main class="sheet">
+  <div class="wrap">
+
+    <div class="strip">
+      <div class="cell"><div class="k">원외처방액</div><div class="v n" id="k-rx">—</div><div class="d" id="k-rx-d"></div></div>
+      <div class="cell"><div class="k">거래처</div><div class="v n" id="k-ac">—</div><div class="d" id="k-ac-d"></div></div>
+      <div class="cell"><div class="k">신규 처방 개시</div><div class="v n" id="k-nw">—</div><div class="d" id="k-nw-d"></div></div>
+      <div class="cell"><div class="k">수금률</div><div class="v n" id="k-cs">—</div><div class="d" id="k-cs-d"></div></div>
+      <div class="cell"><div class="k">반품률</div><div class="v n" id="k-rt">—</div><div class="d" id="k-rt-d"></div></div>
+    </div>
+
+    <section class="mod" id="m-prod">
+      <div class="mod-head">
+        <h2>품목별 실적</h2>
+        <p>행 클릭 시 상세</p>
+        <div class="right">
+          <input id="q" type="search" placeholder="품목 · 성분 · 치료영역" aria-label="품목 검색">
+          <select id="catSel" aria-label="치료영역"><option value="all">전 치료영역</option></select>
+        </div>
+      </div>
+      <table id="ptbl">
+        <thead><tr>
+          <th data-k="name">품목</th>
+          <th class="r" data-k="sales" data-sorted="desc">매출</th>
+          <th class="r" data-k="target">목표</th>
+          <th class="r" data-k="rate">달성 / 목표선</th>
+          <th class="r" data-k="yoy">전년비</th>
+          <th class="r" data-k="share">비중</th>
+          <th class="r" data-k="rx">처방 커버</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="mod" id="m-branch">
+      <div class="mod-head"><h2>지점 달성 현황</h2><p>막대 = 월별 실적 · 숫자 = 달성률</p></div>
+      <div class="tiles" id="tiles"></div>
+    </section>
+
+    <div class="trio">
+      <section class="mod" id="m-ch">
+        <div class="mod-head"><h2>채널 구성</h2></div>
+        <div class="colchart">
+          <svg id="chsvg" viewBox="0 0 300 170" role="img" aria-label="채널별 매출 비중"></svg>
+          <div class="chlist" id="chlist"></div>
+        </div>
+      </section>
+
+      <section class="mod" id="m-mr">
+        <div class="mod-head"><h2>담당자 상위</h2></div>
+        <table><thead><tr><th>담당</th><th>지점</th><th class="r">매출</th><th class="r">달성률</th><th class="r">신규</th></tr></thead>
+        <tbody id="mrb"></tbody></table>
+      </section>
+
+      <section class="mod" id="m-issue">
+        <div class="mod-head"><h2>이슈</h2><p id="iss-n"></p></div>
+        <div style="border-top:2px solid var(--ckd)" id="isslist"></div>
+      </section>
+    </div>
+
+    <p class="foot">
+      공개된 품목 구성을 참고한 <b>샘플 데이터</b>입니다. 실제 실적 수치가 아닙니다. 색상은 CKD BLUE(R0 G56 B148) · CKD GOLD · CKD SILVER · CKD BLACK 기준.<br>
+      실데이터 연동은 스크립트 상단 <code>DATA</code>의 <code>products / branches / channels / reps / issues</code> 교체.
+    </p>
+  </div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="p-name">
+  <div class="ph">
+    <div><h3 id="p-name">—</h3><p id="p-meta">—</p></div>
+    <button class="x" id="p-x" aria-label="닫기">&times;</button>
+  </div>
+  <div class="pb">
+    <div class="pstats">
+      <div><span>매출</span><b class="n" id="p-sales">—</b></div>
+      <div><span>달성률</span><b class="n" id="p-rate">—</b></div>
+      <div><span>전년비</span><b class="n" id="p-yoy">—</b></div>
+      <div><span>전체 비중</span><b class="n" id="p-share">—</b></div>
+    </div>
+    <div class="psub">월별 추이</div>
+    <svg id="p-spark" viewBox="0 0 380 110" role="img" aria-label="품목 월별 추이"></svg>
+    <div class="psub">지점별 분포</div>
+    <div id="p-br"></div>
+    <div class="psub">메모</div>
+    <p id="p-memo" style="font-size:13px;color:#333940"></p>
+  </div>
+</aside>
+
+<script>
+/* ═════ DATA — 실데이터 연동 시 이 객체만 교체 (단위: 억원) ═════ */
+const DATA = {
+  asOf:'2026-08-31', monthsElapsed:8,
+  products:[
+    {name:'자누비아 패밀리',ing:'시타글립틴',cat:'당뇨',sales:786,target:833,yoy:-6.2,rx:92,memo:'제네릭 경쟁 심화. 자누메트XR 중심 방어, 의원급 이탈이 주 감소 요인.'},
+    {name:'프롤리아',ing:'데노수맙',cat:'골다공증',sales:748,target:700,yoy:17.0,rx:88,memo:'급여 확대 이후 수요 지속 증가. 종합병원·정형외과 채널이 성장 견인.'},
+    {name:'아토젯',ing:'아토르바+에제티미브',cat:'이상지질',sales:553,target:520,yoy:15.7,rx:90,memo:'제네릭 출시에도 오리지널 선호 유지. 병용 처방 확대가 성장 축.'},
+    {name:'글리아티린',ing:'콜린알포세레이트',cat:'뇌기능',sales:407,target:400,yoy:3.1,rx:84,memo:'급여 재평가 이슈 상시 모니터링.'},
+    {name:'펙수클루',ing:'펙수프라잔',cat:'소화기',sales:280,target:333,yoy:null,rx:71,memo:'공동판매 개시 품목. 케이캡 계약 종료 공백 보전 목적. 초기 침투율 개선이 최우선.'},
+    {name:'텔미누보',ing:'텔미사르탄+암로디핀',cat:'고혈압',sales:263,target:253,yoy:5.4,rx:86,memo:'의원 채널 안정. 복합제 수요 견조.'},
+    {name:'사이폴엔',ing:'사이클로스포린',cat:'면역억제',sales:212,target:213,yoy:0.8,rx:79,memo:'장기이식 센터 고정 수요. 변동성 낮음.'},
+    {name:'큐시미아',ing:'펜터민+토피라메이트',cat:'비만',sales:197,target:173,yoy:18.4,rx:74,memo:'비만 시장 확대 수혜. GLP-1 계열 대비 포지셔닝 정리 필요.'},
+    {name:'딜라트렌',ing:'카르베딜롤',cat:'고혈압',sales:179,target:183,yoy:-2.1,rx:81,memo:'성숙기 품목. 처방 유지 방어.'},
+    {name:'리피로우',ing:'아토르바스타틴',cat:'이상지질',sales:143,target:160,yoy:-9.5,rx:77,memo:'약가 인하 영향 지속. 아토젯 전환 처방 일부 발생.'},
+    {name:'듀비에',ing:'로베글리타존',cat:'당뇨',sales:124,target:120,yoy:2.7,rx:68,memo:'자체 개발 신약. 병용 요법 확대 마케팅.'},
+    {name:'벤포벨',ing:'벤포티아민 복합',cat:'일반의약품',sales:101,target:93,yoy:12.9,rx:0,memo:'약국 채널 프로모션 효과. OTC 매대 확보 지속.'},
+    {name:'이모튼',ing:'아보카도소야',cat:'관절',sales:92,target:87,yoy:7.2,rx:72,memo:'정형외과 채널 안정 성장.'},
+    {name:'프리그렐',ing:'클로피도그렐',cat:'항혈전',sales:79,target:90,yoy:-11.8,rx:70,memo:'약가 인하·경쟁 심화. 목표 하향 검토 대상.'},
+    {name:'타조페란',ing:'피페라실린+타조박탐',cat:'항생제',sales:75,target:77,yoy:-1.4,rx:0,memo:'입찰 기반 품목. 종합병원 입찰 일정에 실적 연동.'},
+    {name:'마이렙트',ing:'미코페놀레이트',cat:'면역억제',sales:72,target:67,yoy:9.5,rx:76,memo:'이식 건수 증가에 따른 자연 성장.'}
+  ],
+  branches:[
+    {name:'서울',sales:1093,target:1073,reps:64,accounts:1420},
+    {name:'경인',sales:951,target:900,reps:58,accounts:1310},
+    {name:'영남',sales:742,target:773,reps:47,accounts:1015},
+    {name:'종합병원',sales:500,target:486,reps:31,accounts:184},
+    {name:'충청',sales:449,target:427,reps:28,accounts:640},
+    {name:'호남',sales:398,target:420,reps:26,accounts:596},
+    {name:'강원',sales:178,target:173,reps:12,accounts:258}
+  ],
+  channels:[
+    {name:'종합병원',pct:32.4,color:'#003894'},
+    {name:'의원',pct:28.6,color:'#2A6FD6'},
+    {name:'병원',pct:17.8,color:'#6D9BDF'},
+    {name:'약국',pct:13.1,color:'#8A7842'},
+    {name:'도매·기타',pct:8.1,color:'#9EA3A8'}
+  ],
+  reps:[
+    {name:'김도현',br:'경인',sales:24.8,rate:118,nw:14},
+    {name:'이서준',br:'서울',sales:27.3,rate:114,nw:11},
+    {name:'박민지',br:'종합병원',sales:31.6,rate:112,nw:6},
+    {name:'정하늘',br:'충청',sales:19.4,rate:110,nw:12},
+    {name:'최유진',br:'서울',sales:25.1,rate:107,nw:9},
+    {name:'강태호',br:'영남',sales:21.7,rate:104,nw:10},
+    {name:'윤소라',br:'경인',sales:20.9,rate:102,nw:8},
+    {name:'한지훈',br:'호남',sales:18.2,rate:99,nw:7}
+  ],
+  issues:[
+    {lv:'high',t:'펙수클루 침투율 목표 미달',d:'공동판매 6개월 차 누적 달성률 84%. 의원 채널 커버리지 계획 대비 61%.',when:'D-14'},
+    {lv:'high',t:'자누비아 패밀리 의원 이탈',d:'2분기 대비 처방 기관 37곳 감소. 상위 이탈처 재방문 리스트 배포 필요.',when:'금주'},
+    {lv:'mid',t:'글리아티린 급여 재평가',d:'진행 경과별 매출 영향 시나리오 분석 요청 접수.',when:'9월'},
+    {lv:'mid',t:'호남지점 달성률 95%',d:'전 지점 최하위. 인력 2명 결원으로 커버리지 공백.',when:'D-7'},
+    {lv:'low',t:'타조페란 입찰 일정',d:'상급종합 4개소 연간 입찰 4분기 집중. 물량 확보 시 목표 상회 가능.',when:'10월'}
+  ],
+  months:['1','2','3','4','5','6','7','8','9','10','11','12'],
+  seasonality:[.079,.074,.087,.084,.086,.089,.081,.080,.085,.087,.085,.083]
+};
+
+/* ═════ helpers ═════ */
+const $=s=>document.querySelector(s);
+const fmt=(n,d=0)=>Number(n).toLocaleString('ko-KR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=n=>(n>=0?'+':'')+n.toFixed(1)+'%';
+const cum=k=>DATA.seasonality.slice(0,k).reduce((a,b)=>a+b,0);
+const BASE=cum(DATA.monthsElapsed);
+const P={q1:{k:3,l:'2026년 1분기 (1~3월)'},h1:{k:6,l:'2026년 상반기 (1~6월)'},ytd:{k:8,l:'2026년 누적 (1~8월)'},fy:{k:12,l:'2026년 연간 전망'}};
+let st={p:'ytd',br:'all',sk:'sales',sd:'desc',q:'',cat:'all',sel:null};
+const scale=()=>cum(P[st.p].k)/BASE;
+function wS(){if(st.br==='all')return 1;const b=DATA.branches.find(x=>x.name===st.br);return b.sales/DATA.branches.reduce((a,x)=>a+x.sales,0);}
+function wT(){if(st.br==='all')return 1;const b=DATA.branches.find(x=>x.name===st.br);return b.target/DATA.branches.reduce((a,x)=>a+x.target,0);}
+function view(){
+  const s=scale(),a=wS(),t=wT();
+  const tot=DATA.products.reduce((x,p)=>x+p.sales,0)*s*a;
+  return DATA.products.map(p=>{
+    const sales=p.sales*s*a,target=p.target*s*t;
+    return {...p,sales,target,rate:sales/target*100,share:sales/tot*100};
+  });
+}
+
+/* ═════ board ═════ */
+function board(){
+  const V=view(), act=V.reduce((a,p)=>a+p.sales,0), tgt=V.reduce((a,p)=>a+p.target,0);
+  const rate=act/tgt*100, gap=act-tgt, k=P[st.p].k;
+  const yoy=V.reduce((a,p)=>a+(p.yoy==null?0:p.yoy*p.sales),0)/V.filter(p=>p.yoy!=null).reduce((a,p)=>a+p.sales,0);
+
+  $('#h-lab').textContent=P[st.p].l+(st.br==='all'?' · 전 지점':' · '+st.br);
+  $('#h-act').textContent=fmt(act);
+  $('#h-rate').textContent=rate.toFixed(1)+'%';
+  $('#h-gap').textContent=(gap>=0?'+':'')+fmt(gap)+'억';
+  $('#h-yoy').textContent=pct(yoy);
+  $('#h-sub').textContent=`목표 ${fmt(tgt)}억 · `+(rate>=100?`${fmt(gap)}억 초과`:`${fmt(-gap)}억 미달`)+(k<12?` · 잔여 ${12-k}개월`:'');
+  $('#s-act').textContent=fmt(act); $('#s-rate').textContent=rate.toFixed(1)+'%';
+  $('#s-scope').textContent=P[st.p].l;
+
+  // KPI
+  const s=scale()*wS();
+  $('#k-rx').innerHTML=fmt(act*0.72)+'<small>억</small>';
+  $('#k-rx-d').innerHTML='전체 매출의 72%';
+  $('#k-ac').innerHTML=fmt(DATA.branches.reduce((a,b)=>a+b.accounts,0)*(st.br==='all'?1:wS()))+'<small>개</small>';
+  $('#k-ac-d').innerHTML='<span class="pos">+218</span> 전년 대비';
+  $('#k-nw').innerHTML=fmt(412*s)+'<small>처</small>';
+  $('#k-nw-d').innerHTML='목표 대비 <span class="pos">103%</span>';
+  $('#k-cs').innerHTML='96.4<small>%</small>';
+  $('#k-cs-d').innerHTML='<span class="neg">-0.8%p</span> 전분기';
+  $('#k-rt').innerHTML='1.9<small>%</small>';
+  $('#k-rt-d').innerHTML='<span class="pos">-0.3%p</span> 개선';
+}
+
+/* ═════ year shape (in blue board) ═════ */
+function yearShape(){
+  const a=wS(),t=wT(),k=P[st.p].k;
+  const fyS=DATA.products.reduce((x,p)=>x+p.sales,0)/BASE*a;
+  const fyT=DATA.products.reduce((x,p)=>x+p.target,0)/BASE*t;
+  const act=DATA.seasonality.map((w,i)=>fyS*w*(1+(i%3===1?-.03:.02)));
+  const tgt=DATA.seasonality.map(w=>fyT*w);
+  const prev=act.map((v,i)=>v*(.93+i*.004));
+
+  const W=1000,H=150,B=22,mx=Math.max(...act,...tgt,...prev)*1.1;
+  const cw=W/12, bw=cw*.46;
+  const y=v=>H-B-(v/mx)*(H-B-6);
+  let g='';
+  tgt.forEach((v,i)=>{
+    const x=cw*i+cw/2;
+    g+=`<rect x="${x-bw/2}" y="${y(v)}" width="${bw}" height="${H-B-y(v)}" fill="rgba(255,255,255,.2)"/>`;
+  });
+  act.forEach((v,i)=>{
+    if(i>=k)return;
+    const x=cw*i+cw/2;
+    g+=`<rect x="${x-bw*.62/2}" y="${y(v)}" width="${bw*.62}" height="${H-B-y(v)}" fill="#fff"/>`;
+  });
+  g+=`<path d="${prev.map((v,i)=>`${i?'L':'M'}${cw*i+cw/2},${y(v)}`).join(' ')}" fill="none" stroke="#C3A85F" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+  g+=`<line x1="0" y1="${H-B}" x2="${W}" y2="${H-B}" stroke="rgba(255,255,255,.35)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+  DATA.months.forEach((m,i)=>{
+    g+=`<text class="mo" x="${cw*i+cw/2}" y="${H-7}" text-anchor="middle" ${i>=k?'opacity=".45"':''}>${m}</text>`;
+  });
+  if(k<12) g+=`<line x1="${cw*k}" y1="0" x2="${cw*k}" y2="${H-B}" stroke="#C3A85F" stroke-width="1.5" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>`;
+  $('#year').innerHTML=g;
+}
+
+/* ═════ product table ═════ */
+function ptable(){
+  let R=view();
+  if(st.q){const q=st.q.trim().toLowerCase();R=R.filter(p=>(p.name+p.ing+p.cat).toLowerCase().includes(q));}
+  if(st.cat!=='all')R=R.filter(p=>p.cat===st.cat);
+  const d=st.sd==='desc'?-1:1;
+  R.sort((a,b)=>st.sk==='name'?a.name.localeCompare(b.name,'ko')*d:(((a[st.sk]??-999)-(b[st.sk]??-999))*d));
+  const mx=Math.max(...R.map(r=>Math.max(r.sales,r.target)),1);
+
+  $('#ptbl tbody').innerHTML=R.map(p=>`
+    <tr data-n="${p.name}" ${st.sel===p.name?'aria-selected="true"':''}>
+      <td><span class="pn">${p.name}</span><span class="pi">${p.ing} · ${p.cat}</span></td>
+      <td class="r n" style="font-weight:700">${fmt(p.sales)}</td>
+      <td class="r n" style="color:var(--grey)">${fmt(p.target)}</td>
+      <td class="r"><div class="gauge" title="달성 ${p.rate.toFixed(1)}%">
+        <i style="width:${Math.min(p.sales/mx*100,100)}%;background:${p.rate>=100?'var(--ckd)':p.rate>=95?'var(--gold)':'var(--alert)'}"></i>
+        <u style="left:${Math.min(p.target/mx*100,100)}%"></u>
+        <b class="n">${p.rate.toFixed(0)}%</b></div></td>
+      <td class="r n ${p.yoy==null?'':p.yoy>=0?'pos':'neg'}">${p.yoy==null?'신규':pct(p.yoy)}</td>
+      <td class="r n" style="color:var(--grey)">${p.share.toFixed(1)}%</td>
+      <td class="r n" style="color:var(--grey)">${p.rx===0?'—':p.rx+'%'}</td>
+    </tr>`).join('');
+  document.querySelectorAll('#ptbl tbody tr').forEach(tr=>tr.addEventListener('click',()=>openPanel(tr.dataset.n)));
+}
+
+/* ═════ branch small multiples ═════ */
+function tiles(){
+  const s=scale(),k=P[st.p].k;
+  $('#tiles').innerHTML=DATA.branches.map(b=>{
+    const sv=b.sales*s,tv=b.target*s,r=sv/tv*100;
+    const col=r>=100?'#003894':r>=95?'#8A7842':'#9B2C1F';
+    const vals=DATA.seasonality.map((w,i)=>b.sales*w*(1+((i*5)%4-1.5)*.05));
+    const mx=Math.max(...vals);
+    const bars=vals.map((v,i)=>{
+      const h=v/mx*30, x=i*(100/12);
+      return `<rect x="${x+0.7}" y="${32-h}" width="${100/12-1.6}" height="${h}" fill="${i<k?col:'#E3E5E9'}"/>`;
+    }).join('');
+    return `<div class="tile">
+      <div class="bn">${b.name}</div>
+      <div class="br n" style="color:${col}">${r.toFixed(0)}<span style="font-size:.45em;font-weight:600">%</span></div>
+      <div class="bd n">${fmt(sv)}억 / 목표 ${fmt(tv)}억 · ${b.reps}명</div>
+      <svg viewBox="0 0 100 34" preserveAspectRatio="none">${bars}</svg>
+    </div>`;
+  }).join('');
+}
+
+/* ═════ channel column chart ═════ */
+function channels(){
+  const s=scale()*wS(), tot=DATA.products.reduce((a,p)=>a+p.sales,0)*s;
+  const W=300,H=170,B=24,mx=Math.max(...DATA.channels.map(c=>c.pct))*1.15;
+  const cw=W/DATA.channels.length, bw=cw*.52;
+  let g='';
+  DATA.channels.forEach((c,i)=>{
+    const x=cw*i+cw/2, h=(c.pct/mx)*(H-B-16), y=H-B-h;
+    g+=`<rect x="${x-bw/2}" y="${y}" width="${bw}" height="${h}" fill="${c.color}"/>`;
+    g+=`<text x="${x}" y="${y-6}" text-anchor="middle" font-size="12" font-weight="700" fill="#000">${c.pct.toFixed(1)}</text>`;
+    g+=`<text x="${x}" y="${H-8}" text-anchor="middle" font-size="10.5" fill="#6A7078">${c.name}</text>`;
+  });
+  g+=`<line x1="0" y1="${H-B}" x2="${W}" y2="${H-B}" stroke="#D5D8DD"/>`;
+  $('#chsvg').innerHTML=g;
+  $('#chlist').innerHTML=DATA.channels.map(c=>`
+    <div class="chrow"><span class="sw" style="background:${c.color}"></span>${c.name}
+      <b class="n">${fmt(tot*c.pct/100)}억</b></div>`).join('');
+}
+
+/* ═════ reps & issues ═════ */
+function reps(){
+  const list=(st.br==='all'?DATA.reps:DATA.reps.filter(r=>r.br===st.br));
+  $('#mrb').innerHTML=(list.length?list:DATA.reps).slice().sort((a,b)=>b.rate-a.rate).map(r=>`
+    <tr style="cursor:default"><td style="font-weight:650">${r.name}</td>
+    <td style="color:var(--grey)">${r.br}</td>
+    <td class="r n">${r.sales.toFixed(1)}</td>
+    <td class="r n" style="font-weight:700;color:${r.rate>=100?'var(--ckd)':'var(--alert)'}">${r.rate}%</td>
+    <td class="r n" style="color:var(--grey)">${r.nw}</td></tr>`).join('');
+}
+function issues(){
+  const c={high:'#9B2C1F',mid:'#8A7842',low:'#9EA3A8'};
+  $('#isslist').innerHTML=DATA.issues.map(x=>`
+    <div class="issue"><div class="lv" style="background:${c[x.lv]}"></div>
+      <div><h4>${x.t}</h4><p>${x.d}</p></div><time>${x.when}</time></div>`).join('');
+  $('#iss-n').textContent=`긴급 ${DATA.issues.filter(i=>i.lv==='high').length}건 포함 ${DATA.issues.length}건`;
+}
+
+/* ═════ detail panel ═════ */
+function openPanel(name){
+  const p=view().find(x=>x.name===name); if(!p)return;
+  st.sel=name; ptable();
+  $('#p-name').textContent=p.name;
+  $('#p-meta').textContent=`${p.ing} · ${p.cat} · ${P[st.p].l}`;
+  $('#p-sales').textContent=fmt(p.sales)+'억';
+  $('#p-rate').innerHTML=`<span style="color:${p.rate>=100?'var(--ckd)':'var(--alert)'}">${p.rate.toFixed(1)}%</span>`;
+  $('#p-yoy').innerHTML=p.yoy==null?'신규':`<span class="${p.yoy>=0?'pos':'neg'}">${pct(p.yoy)}</span>`;
+  $('#p-share').textContent=p.share.toFixed(1)+'%';
+  $('#p-memo').textContent=p.memo;
+
+  const k=P[st.p].k, fy=p.sales/cum(k);
+  const vals=DATA.seasonality.map((w,i)=>fy*w*(1+((i*7)%5-2)*.018));
+  const W=380,H=110,B=16,mx=Math.max(...vals)*1.18,cw=W/12,bw=cw*.5;
+  let g='';
+  vals.forEach((v,i)=>{
+    const x=cw*i+cw/2,h=(v/mx)*(H-B-6),y=H-B-h;
+    g+=`<rect x="${x-bw/2}" y="${y}" width="${bw}" height="${h}" fill="${i<k?'#003894':'#E3E5E9'}"/>`;
+    g+=`<text x="${x}" y="${H-4}" text-anchor="middle" font-size="9.5" fill="#6A7078">${i+1}</text>`;
+  });
+  $('#p-spark').innerHTML=g;
+
+  const tot=DATA.branches.reduce((a,b)=>a+b.sales,0), top=Math.max(...DATA.branches.map(b=>b.sales));
+  $('#p-br').innerHTML=DATA.branches.map(b=>`
+    <div class="pbr"><span>${b.name}</span>
+      <span class="pbtrack"><i style="width:${b.sales/top*100}%"></i></span>
+      <span class="r n" style="text-align:right">${fmt(p.sales*b.sales/tot,1)}</span></div>`).join('');
+
+  $('#panel').dataset.open='true'; $('#scrim').dataset.open='true'; $('#p-x').focus();
+}
+function closePanel(){$('#panel').dataset.open='false';$('#scrim').dataset.open='false';st.sel=null;ptable();}
+
+/* ═════ wiring ═════ */
+function all(){board();yearShape();ptable();tiles();channels();reps();issues();}
+DATA.branches.forEach(b=>{const o=new Option(b.name,b.name);$('#brSel').add(o);});
+[...new Set(DATA.products.map(p=>p.cat))].sort((a,b)=>a.localeCompare(b,'ko')).forEach(c=>$('#catSel').add(new Option(c,c)));
+
+$('#seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  st.p=b.dataset.p;[...e.currentTarget.children].forEach(x=>x.setAttribute('aria-pressed',x===b));all();});
+$('#brSel').addEventListener('change',e=>{st.br=e.target.value;all();});
+$('#catSel').addEventListener('change',e=>{st.cat=e.target.value;ptable();});
+$('#q').addEventListener('input',e=>{st.q=e.target.value;ptable();});
+document.querySelectorAll('#ptbl th[data-k]').forEach(th=>th.addEventListener('click',()=>{
+  const k=th.dataset.k;
+  if(st.sk===k)st.sd=st.sd==='desc'?'asc':'desc'; else{st.sk=k;st.sd=k==='name'?'asc':'desc';}
+  document.querySelectorAll('#ptbl th').forEach(x=>x.removeAttribute('data-sorted'));
+  th.setAttribute('data-sorted',st.sd); ptable();
+}));
+$('#p-x').addEventListener('click',closePanel);
+$('#scrim').addEventListener('click',closePanel);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
+new IntersectionObserver(([e])=>{$('#sticky').dataset.on=!e.isIntersecting;},{threshold:0})
+  .observe(document.querySelector('.board .shape'));
+
+all();
+</script>
+</body>
+</html>
